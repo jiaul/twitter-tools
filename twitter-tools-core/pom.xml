@@ -108,7 +108,7 @@
               </jvmSettings>
             </program>
             <program>
-              <mainClass>cc.twittertools.index.ExtractTweetidsFromCollection</mainClass>
+              <mainClass>cc.twittertools.util.ExtractTweetidsFromCollection</mainClass>
               <name>ExtractTweetidsFromCollection</name>
             </program>
 	    <program>

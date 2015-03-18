@@ -16,13 +16,9 @@
 
 package cc.twittertools.util;
 
-import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
-
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.InputStreamReader;
-import java.io.PrintStream;
+import java.util.HashMap;
+import java.util.*;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -31,17 +27,13 @@ import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.apache.log4j.Logger;
 
 import cc.twittertools.corpus.data.JsonStatusCorpusReader;
 import cc.twittertools.corpus.data.Status;
 import cc.twittertools.corpus.data.StatusStream;
 
-public class ExtractSubcollection {
-  private static final Logger LOG = Logger.getLogger(ExtractSubcollection.class);
-
+public class ExtractTweetidsFromCollection {
   private static final String COLLECTION_OPTION = "collection";
-  private static final String ID_OPTION = "tweetids";
 
   @SuppressWarnings("static-access")
   public static void main(String[] args) throws Exception {
@@ -49,8 +41,6 @@ public class ExtractSubcollection {
 
     options.addOption(OptionBuilder.withArgName("dir").hasArg()
         .withDescription("source collection directory").create(COLLECTION_OPTION));
-    options.addOption(OptionBuilder.withArgName("file").hasArg()
-        .withDescription("list of tweetids").create(ID_OPTION));
 
     CommandLine cmdline = null;
     CommandLineParser parser = new GnuParser();
@@ -61,32 +51,13 @@ public class ExtractSubcollection {
       System.exit(-1);
     }
 
-    if (!cmdline.hasOption(COLLECTION_OPTION) || !cmdline.hasOption(ID_OPTION)) {
+    if (!cmdline.hasOption(COLLECTION_OPTION)) {
       HelpFormatter formatter = new HelpFormatter();
-      formatter.printHelp(ExtractSubcollection.class.getName(), options);
+      formatter.printHelp(ExtractTweetidsFromCollection.class.getName(), options);
       System.exit(-1);
     }
 
     String collectionPath = cmdline.getOptionValue(COLLECTION_OPTION);
-
-    LongOpenHashSet tweetids = new LongOpenHashSet();
-    File tweetidsFile = new File(cmdline.getOptionValue(ID_OPTION));
-    if (!tweetidsFile.exists()) {
-      System.err.println("Error: " + tweetidsFile + " does not exist!");
-      System.exit(-1);
-    }
-    LOG.info("Reading tweetids from " + tweetidsFile);
-
-    FileInputStream fin = new FileInputStream(tweetidsFile);
-    BufferedReader br = new BufferedReader(new InputStreamReader(fin));
-
-    String s;
-    while ((s = br.readLine()) != null) {
-      tweetids.add(Long.parseLong(s));
-    }
-    br.close();
-    fin.close();
-    LOG.info("Read " + tweetids.size() + " tweetids.");
 
     File file = new File(collectionPath);
     if (!file.exists()) {
@@ -94,15 +65,23 @@ public class ExtractSubcollection {
       System.exit(-1);
     }
 
-    PrintStream out = new PrintStream(System.out, true, "UTF-8");
     StatusStream stream = new JsonStatusCorpusReader(file);
+
     Status status;
+    List <String> TweetId = new ArrayList(10000000);
+    String temp;
     while ((status = stream.next()) != null) {
-      if (tweetids.contains(status.getId())) {
-        out.println(status.getJsonObject().toString());
-      }
+      //System.out.println(status.getId() + "\t" + status.getCreatedAt() + "\t" + status.getScreenname());
+    	temp = status.getId() + "\t" + status.getCreatedAt();
+    	TweetId.add(temp);
     }
-    stream.close();
-    out.close();
+    Collections.sort(TweetId);
+    String Prev = "\0";
+	// Loop over String keys.
+	for (String v : TweetId) {
+		if(Prev != v)
+			System.out.println(v);
+		Prev = v;
+	}
   }
 }
